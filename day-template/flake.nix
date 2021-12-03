@@ -20,7 +20,7 @@
         jailbreakUnbreak = pkg:
           pkgs.haskell.lib.doJailbreak (pkg.overrideAttrs (_: { meta = { }; }));
 
-        packageName = "day-00";
+        packageName = "solution";
       in {
         packages.${packageName} =
           haskellPackages.callCabal2nix packageName ./. rec {

@@ -1,8 +1,8 @@
 cabal-version:      2.4
-name:               aoc
+name:               solution
 version:            0.0.1.0
 
-executable day-01
+executable solution
     main-is:          Main.hs
     build-depends:    base ^>=4.14.3.0
     hs-source-dirs:   .
