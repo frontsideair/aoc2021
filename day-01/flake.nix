@@ -23,7 +23,7 @@
         packageName = "day-01";
       in {
         packages.${packageName} =
-          haskellPackages.callCabal2nix packageName self rec {
+          haskellPackages.callCabal2nix packageName ./. rec {
             # Dependency overrides go here
           };
 
