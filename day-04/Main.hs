@@ -13,20 +13,17 @@ main = do
         Right input -> input
   let steps = [(partition isWinner $ punch sofar <$> boards, last sofar) | sofar <- inits numbers]
   print $ result $ part1 steps
-  print $ result2 $ part2 steps
+  print $ result $ part2 steps
 
 part1 steps = let Just (([board], _), lastNumber) = find (\((winningBoards, losingBoards), lastNumber) -> length winningBoards == 1) steps in (board, lastNumber)
 
 part2 steps =
   let Just ((_, [losingBoard]), _) = find (\((winningBoards, losingBoards), lastNumber) -> length losingBoards == 1) steps
       Just ((_, _), lastNumber) = find (\((winningBoards, losingBoards), lastNumber) -> null losingBoards) steps
-   in (losingBoard, lastNumber)
+   in ((\n -> if Just lastNumber == n then Nothing else n) <$> losingBoard, lastNumber)
 
 result :: (Matrix (Maybe Int), Int) -> Int
 result (board, lastNumber) = lastNumber * sum (catMaybes $ toList board)
-
-result2 :: (Matrix (Maybe Int), Int) -> Int
-result2 (board, lastNumber) = lastNumber * (sum (catMaybes $ toList board) - lastNumber)
 
 isWinner :: Matrix (Maybe Int) -> Bool
 isWinner board = isVerticalWinner || isHorizontalWinner
