@@ -1,5 +1,3 @@
-{-# LANGUAGE ScopedTypeVariables #-}
-
 import Data.Foldable (Foldable (foldl'))
 import Data.List (tails)
 

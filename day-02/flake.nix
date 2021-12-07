@@ -6,7 +6,7 @@
   description = "My haskell application";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -15,27 +15,28 @@
       let
         pkgs = nixpkgs.legacyPackages.${system};
 
-        haskellPackages = pkgs.haskellPackages;
-
-        jailbreakUnbreak = pkg:
-          pkgs.haskell.lib.doJailbreak (pkg.overrideAttrs (_: { meta = { }; }));
+        haskellPackages = pkgs.haskellPackages.override {
+          overrides = hself: hsuper: {
+            ${packageName} =
+              hself.callCabal2nix packageName ./. { };
+            ormolu = pkgs.haskell.lib.overrideCabal hsuper.ormolu (_: {
+              enableSeparateBinOutput = false;
+            });
+            ghcid = pkgs.haskell.lib.overrideCabal hsuper.ghcid (_: {
+              enableSeparateBinOutput = false;
+            });
+          };
+        };
 
         packageName = "solution";
       in {
-        packages.${packageName} =
-          haskellPackages.callCabal2nix packageName ./. rec {
-            # Dependency overrides go here
-          };
+        packages.${packageName} = haskellPackages.${packageName};
 
         defaultPackage = self.packages.${system}.${packageName};
 
-        devShell = pkgs.mkShell {
-          buildInputs = with haskellPackages; [
-            haskell-language-server
-            ghcid
-            cabal-install
-          ];
-          inputsFrom = builtins.attrValues self.packages.${system};
+        devShell = haskellPackages.shellFor {
+          packages = p: [p.${packageName}];
+          buildInputs = [haskellPackages.haskell-language-server haskellPackages.cabal-install haskellPackages.ghcid];
         };
       });
 }
