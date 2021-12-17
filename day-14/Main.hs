@@ -1,15 +1,12 @@
-{-# LANGUAGE TupleSections #-}
-
-import Control.Monad.State (State, evalState, foldM, get, modify, runState)
-import Data.List (foldl', foldl1', sortOn)
+import Data.List (foldl')
 import Data.Map.Strict (Map, (!))
 import qualified Data.Map.Strict as Map
-import Text.Parsec (anyChar, char, count, endBy1, endOfLine, eof, letter, many1, sepBy1, string, try)
+import Text.Parsec (endBy1, endOfLine, eof, letter, many1, string)
 import Text.Parsec.Text (Parser, parseFromFile)
 
 type Pair = (Char, Char)
 
-type Rules = Map (Pair, Int) [Pair]
+type Rules = Map Pair [Pair]
 
 main :: IO ()
 main = do
@@ -17,35 +14,23 @@ main = do
   print $ part1 template rules
   print $ part2 template rules
 
-expand :: [Pair] -> Int -> State Rules [Pair]
-expand template n =
-  foldM
-    ( \acc pair -> do
-        rules <- get
-        case Map.lookup (pair, n) rules of
-          Nothing -> do
-            v <- expand (rules ! (pair, 1)) (n - 1)
-            modify $ Map.insert (pair, n) v
-            return (acc ++ v)
-          Just result -> return (acc ++ result)
-    )
-    []
-    template
-
-part1 :: [Pair] -> Map (Pair, Int) [Pair] -> Int
+part1 :: Map Pair Double -> Rules -> Integer
 part1 = go 10
 
-part2 :: [Pair] -> Map (Pair, Int) [Pair] -> Int
-part2 = go 25 -- 40
+part2 :: Map Pair Double -> Rules -> Integer
+part2 = go 40
 
-go :: Int -> [Pair] -> Map (Pair, Int) [Pair] -> Int
-go n template rules = maximum sorted - minimum sorted
+go :: Int -> Map Pair Double -> Rules -> Integer
+go n template rules = maximum freqs - minimum freqs
   where
-    result = unpairs $ evalState (expand template n) rules
-    sorted = snd <$> Map.toList (groupByCount result)
+    result = iterate (expand rules) template !! n
+    freqs = countChars result
 
-groupByCount :: Ord a => [a] -> Map a Int
-groupByCount = Map.fromListWith (+) . map (,1)
+expand :: Rules -> Map Pair Double -> Map Pair Double
+expand rules map = foldl' (\acc (pair, m) -> foldl' (\acc (pair, n) -> Map.insertWith (+) pair (n * m) acc) acc ((pair, -1) : zip (rules ! pair) (repeat 1))) map (Map.toList map)
+
+countChars :: Map Pair Double -> [Integer]
+countChars map = ceiling . (/ 2) . snd <$> Map.toList (foldl' (\acc ((l, r), n) -> Map.insertWith (+) l n $ Map.insertWith (+) r n acc) Map.empty (Map.toList map))
 
 pairs :: [a] -> [(a, a)]
 pairs template = zip template $ tail template
@@ -53,19 +38,19 @@ pairs template = zip template $ tail template
 unpairs :: [(a, a)] -> [a]
 unpairs xs = fst (head xs) : (snd <$> xs)
 
-parser :: Parser ([Pair], Rules)
+parser :: Parser (Map Pair Double, Rules)
 parser = do
   template <- many1 letter
   endOfLine
   endOfLine
   rules <- ruleParser `endBy1` endOfLine
   eof
-  return (pairs template, Map.fromList rules)
+  return (Map.fromListWith (+) $ zip (pairs template) (repeat 1), Map.fromList rules)
 
-ruleParser :: Parser ((Pair, Int), [Pair])
+ruleParser :: Parser (Pair, [Pair])
 ruleParser = do
   first <- letter
   second <- letter
   string " -> "
   right <- letter
-  return (((first, second), 1), [(first, right), (right, second)])
+  return ((first, second), [(first, right), (right, second)])
