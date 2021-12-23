@@ -16,8 +16,7 @@ import qualified Data.Vector as V
 import Text.Parsec (count, digit, endBy1, endOfLine, eof, many1)
 import Text.Parsec.Text (Parser, parseFromFile)
 
-newtype VBounded a = VBounded (V.Vector a)
-  deriving (Eq, Show, Functor, Foldable)
+newtype VBounded a = VBounded (V.Vector a) deriving (Eq, Show, Functor, Foldable)
 
 instance Distributive VBounded where
   distribute = distributeRep
@@ -35,9 +34,7 @@ type Grid a = Store (Compose VBounded VBounded) a
 type Octopus = (Int, Bool)
 
 mkGrid :: Matrix Int -> Grid Octopus
-mkGrid xs = store lookup (0, 0)
-  where
-    lookup (x, y) = (xs ! (x + 1, y + 1), False)
+mkGrid xs = store lookup (0, 0) where lookup (x, y) = (xs ! (x + 1, y + 1), False)
 
 type Rule = Grid Octopus -> Octopus
 
@@ -45,9 +42,7 @@ neighbourCoords :: (Int, Int) -> [(Int, Int)]
 neighbourCoords (x, y) = [(x', y') | x' <- [x -1, x, x + 1], x' >= 0, x' < gridSize, y' <- [y -1, y, y + 1], y' >= 0, y' < gridSize, (x', y') /= (x, y)]
 
 turnRule :: Rule
-turnRule g = (energy + 1, flashed)
-  where
-    (energy, flashed) = extract g
+turnRule g = (energy + 1, flashed) where (energy, flashed) = extract g
 
 cascadeRule :: Rule
 cascadeRule g = (energy + numFlashingNeighbors, energy > 9)
@@ -60,9 +55,7 @@ isFlashing :: Octopus -> Bool
 isFlashing (energy, flashed) = not flashed && (energy > 9)
 
 finalRule :: Rule
-finalRule g = (if energy > 9 then 0 else energy, False)
-  where
-    (energy, _) = extract g
+finalRule g = (if energy > 9 then 0 else energy, False) where (energy, _) = extract g
 
 step :: Rule -> Grid Octopus -> Grid Octopus
 step = extend
