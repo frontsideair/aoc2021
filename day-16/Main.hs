@@ -1,4 +1,3 @@
-import Control.Monad (when)
 import Data.Functor (($>))
 import Text.Parsec (char, choice, count, endOfLine, eof, many1, parse, (<|>))
 import Text.Parsec.String (Parser, parseFromFile)
@@ -13,14 +12,8 @@ main :: IO ()
 main = do
   input <- parseFromFile parser "input.txt" >>= either (error . show) return
   let Right result = parse packetParser "" input
-  print $ part1 result
-  print $ part2 result
-
-part1 :: Packet -> Int
-part1 = sumVersions
-
-part2 :: Packet -> Int
-part2 = eval
+  print $ sumVersions result
+  print $ eval result
 
 sumVersions :: Packet -> Int
 sumVersions (Packet n (Literal _)) = n
@@ -83,15 +76,15 @@ literalParser = do
   chunk <- count 4 bit
   if start == '1' then (chunk ++) <$> literalParser else return chunk
 
--- operatorParser :: Parser Packet'
+operatorParser :: Parser [Packet]
 operatorParser = do
   lengthTypeId <- bit
   if lengthTypeId == '0' then bits 15 >>= operatorLength else bits 11 >>= operatorCount
 
--- operatorCount :: Int -> Parser Packet'
+operatorCount :: Int -> Parser [Packet]
 operatorCount n = count n packetParser
 
--- operatorLength :: Int -> Parser Packet'
+operatorLength :: Int -> Parser [Packet]
 operatorLength n = do
   text <- count n bit
   return $ either (error . show) id $ parse (many1 packetParser) "" text
