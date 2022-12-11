@@ -1,12 +1,6 @@
-# SPDX-FileCopyrightText: 2021 Serokell <https://serokell.io/>
-#
-# SPDX-License-Identifier: CC0-1.0
-
 {
-  description = "My haskell application";
-
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/release-22.11";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -19,12 +13,6 @@
           overrides = hself: hsuper: {
             ${packageName} =
               hself.callCabal2nix packageName ./. { };
-            ormolu = pkgs.haskell.lib.overrideCabal hsuper.ormolu (_: {
-              enableSeparateBinOutput = false;
-            });
-            ghcid = pkgs.haskell.lib.overrideCabal hsuper.ghcid (_: {
-              enableSeparateBinOutput = false;
-            });
           };
         };
 
